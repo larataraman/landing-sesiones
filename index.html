@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reservar sesión 1:1</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f3efe8;
+      color: #222;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+    h1, h2 { margin-bottom: 12px; }
+    p { line-height: 1.5; }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .btn {
+      display: inline-block;
+      background: #111;
+      color: #fff;
+      padding: 14px 20px;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-top: 16px;
+    }
+    .btn.secondary { background: #666; }
+    .hidden { display: none; }
+    label { display: block; margin-top: 12px; }
+    select, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="card" id="step1">
+    <h1>Sesiones de acompañamiento</h1>
+    <p>Espacio individual de conversación guiada para ordenar, revisar situaciones puntuales y trabajar decisiones con más claridad.</p>
+    <a class="btn" href="#" onclick="goToStep(2)">Elegir día y horario</a>
+  </div>
+
+  <div class="card hidden" id="step2">
+    <h2>Día y horario</h2>
+    <label>Fecha</label>
+    <input type="date" id="date" onchange="updateTimes()" />
+
+    <label>Horario</label>
+    <select id="time"></select>
+
+    <a class="btn" href="#" onclick="loadForm(); goToStep(3)">Continuar</a>
+    <a class="btn secondary" href="#" onclick="goToStep(1)">Volver</a>
+  </div>
+
+  <div class="card hidden" id="step3">
+    <h2>Formulario previo</h2>
+    <p>Completá el formulario para continuar con la reserva.</p>
+    <iframe id="googleForm" width="100%" height="700" frameborder="0"></iframe>
+    <a class="btn secondary" href="#" onclick="goToStep(4)">Continuar</a>
+  </div>
+
+  <div class="card hidden" id="step4">
+    <h2>Valor de la sesión</h2>
+    <p>Valor total: <strong>$55.000</strong></p>
+    <p>Reserva con el <strong>50%</strong> ($27.500).</p>
+    <a class="btn" href="PEGAR_LINK_MERCADO_PAGO" target="_blank">Pagar y reservar</a>
+  </div>
+
+</div>
+
+<script>
+  const timesByDay = {
+    lunes: ['14:00', '15:00', '16:00', '17:00'],
+    martes: ['11:00', '12:00', '14:00', '15:00', '16:00'],
+    miercoles: ['15:00', '16:00', '17:00', '18:00 (grupal)'],
+    jueves: ['12:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+    viernes: ['12:00', '13:00', '14:00', '15:00', '18:00 (grupal)']
+  };
+
+  window.onload = () => {
+    const dateInput = document.getElementById('date');
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 2);
+
+    const yyyy = minDate.getFullYear();
+    const mm = String(minDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(minDate.getDate()).padStart(2, '0');
+
+    dateInput.min = `${yyyy}-${mm}-${dd}`;
+  };
+
+  function updateTimes() {
+    const dateInput = document.getElementById('date');
+    const timeSelect = document.getElementById('time');
+    timeSelect.innerHTML = '';
+    if (!dateInput.value) return;
+
+    const dayIndex = new Date(dateInput.value + 'T00:00').getDay();
+    const map = {1:'lunes',2:'martes',3:'miercoles',4:'jueves',5:'viernes'};
+    const dayKey = map[dayIndex];
+
+    if (!dayKey) {
+      alert('Solo hay turnos de lunes a viernes');
+      dateInput.value = '';
+      return;
+    }
+
+    timesByDay[dayKey].forEach(t => {
+      const opt = document.createElement('option');
+      opt.textContent = t;
+      timeSelect.appendChild(opt);
+    });
+  }
+
+  function loadForm() {
+    const date = document.getElementById('date').value;
+    const time = document.getElementById('time').value;
+    if (!date || !time) {
+      alert('Elegí fecha y horario');
+      return;
+    }
+
+    const base = 'https://docs.google.com/forms/d/e/1FAIpQLSc-oVgheFJldFczo4RC26a6S34ECyvgNGO0BVwZaMaqF1xAcA/viewform?usp=pp_url';
+    const url = base + '&entry.304542391=' + encodeURIComponent(date) + '&entry.989379628=' + encodeURIComponent(time) + '&embedded=true';
+    document.getElementById('googleForm').src = url;
+  }
+
+  function goToStep(step) {
+    document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+    document.getElementById('step' + step).classList.remove('hidden');
+  }
+</script>
+</body>
+</html>
