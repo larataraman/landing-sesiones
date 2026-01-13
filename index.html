@@ -104,8 +104,8 @@
     dateInput.min = `${yyyy}-${mm}-${dd}`;
   };
 
-  function updateTimes() {
-    function updateTimes() {
+ <script>
+async function updateTimes() {
   const dateInput = document.getElementById('date');
   const timeSelect = document.getElementById('time');
   timeSelect.innerHTML = '';
@@ -113,50 +113,53 @@
   if (!dateInput.value) return;
 
   const selectedDate = new Date(dateInput.value + 'T00:00');
-  const day = selectedDate.getDay(); // 0 domingo, 6 sábado
+  const day = selectedDate.getDay(); // 0 dom - 6 sáb
 
-  // bloquear fines de semana
+  // Bloqueo fines de semana
   if (day === 0 || day === 6) {
     alert('No hay turnos disponibles los fines de semana');
     dateInput.value = '';
     return;
   }
 
-  const timesByDay = {
+  // Horarios base
+  const baseTimes = {
     1: ['14:00','15:00','16:00','17:00'],
     2: ['11:00','12:00','14:00','15:00','16:00'],
     3: ['15:00','16:00','17:00','18:00 (grupal)'],
     4: ['12:00','14:00','15:00','16:00','17:00','18:00'],
     5: ['12:00','13:00','14:00','15:00','18:00 (grupal)']
-  };
+  }[day] || [];
 
-  timesByDay[day].forEach(t => {
-    const opt = document.createElement('option');
-    opt.textContent = t;
-    timeSelect.appendChild(opt);
-  });
-}
-    const dateInput = document.getElementById('date');
-    const timeSelect = document.getElementById('time');
-    timeSelect.innerHTML = '';
-    if (!dateInput.value) return;
+  // 👉 TU WEB APP
+  const webAppUrl = 'https://script.google.com/macros/s/AKfycbxeaJRRUz99ZBPqAQ43m_OI9uNathUppgkmQlDu496eokpBIgK5PIaPNlnCIctNlnqhDA/exec';
 
-    const dayIndex = new Date(dateInput.value + 'T00:00').getDay();
-    const map = {1:'lunes',2:'martes',3:'miercoles',4:'jueves',5:'viernes'};
-    const dayKey = map[dayIndex];
+  try {
+    const res = await fetch(`${webAppUrl}?date=${dateInput.value}`);
+    const data = await res.json();
+    const occupied = data.occupied || [];
 
-    if (!dayKey) {
-      alert('Solo hay turnos de lunes a viernes');
+    baseTimes.forEach(t => {
+      const cleanTime = t.replace(' (grupal)', '');
+      if (!occupied.includes(cleanTime)) {
+        const opt = document.createElement('option');
+        opt.textContent = t;
+        timeSelect.appendChild(opt);
+      }
+    });
+
+    if (!timeSelect.options.length) {
+      alert('Ese día no tiene horarios disponibles');
       dateInput.value = '';
-      return;
     }
 
-    timesByDay[dayKey].forEach(t => {
-      const opt = document.createElement('option');
-      opt.textContent = t;
-      timeSelect.appendChild(opt);
-    });
+  } catch (err) {
+    alert('Error al consultar disponibilidad');
+    console.error(err);
   }
+}
+</script>
+
 
   function loadForm() {
     const date = document.getElementById('date').value;
