@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Reservar sesión</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
     body {
@@ -21,12 +21,10 @@
       background: #fff;
       padding: 24px;
       border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,.08);
       margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.08);
     }
-    h1, h2 {
-      margin-top: 0;
-    }
+    .hidden { display: none; }
     .btn {
       display: inline-block;
       margin-top: 16px;
@@ -36,21 +34,9 @@
       text-decoration: none;
       border-radius: 6px;
     }
-    .btn.secondary {
-      background: #666;
-    }
-    label {
-      display: block;
-      margin-top: 12px;
-    }
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-    }
-    .hidden {
-      display: none;
-    }
+    .btn.secondary { background: #666; }
+    label { display:block; margin-top:12px; }
+    input, select { width:100%; padding:10px; margin-top:6px; }
   </style>
 </head>
 
@@ -60,12 +46,8 @@
   <!-- PASO 1 -->
   <div class="card" id="step1">
     <h1>Sesiones de acompañamiento</h1>
-    <p>
-      Espacio de trabajo personalizado para ordenar, decidir, revisar situaciones
-      y destrabar procesos personales o profesionales.
-    </p>
-
-    <a href="#" class="btn" onclick="goToStep(2)">Elegir día y horario</a>
+    <p>Espacio de trabajo personalizado para ordenar, decidir y destrabar procesos.</p>
+    <a class="btn" href="#" onclick="goToStep(2)">Elegir día y horario</a>
   </div>
 
   <!-- PASO 2 -->
@@ -73,39 +55,40 @@
     <h2>Día y horario</h2>
 
     <label>Fecha</label>
-    <input type="date" id="date" onchange="updateTimes()" />
+    <input type="date" id="date" onchange="updateTimes()">
 
     <label>Horario</label>
     <select id="time"></select>
 
-    <a href="#" class="btn" onclick="goToStep(3)">Continuar</a>
-    <a href="#" class="btn secondary" onclick="goToStep(1)">Volver</a>
+    <a class="btn" href="#" onclick="goToStep(3)">Continuar</a>
+    <a class="btn secondary" href="#" onclick="goToStep(1)">Volver</a>
   </div>
 
   <!-- PASO 3 -->
   <div class="card hidden" id="step3">
-    <h2>Siguiente paso</h2>
-    <p>
-      En el próximo paso vas a completar un formulario previo y luego avanzar con la reserva.
-    </p>
+    <h2>Formulario previo</h2>
 
-    <a href="#" class="btn secondary" onclick="goToStep(2)">Volver</a>
+    <iframe
+      src="https://docs.google.com/forms/d/e/1FAIpQLSc-oVgheFJldFczo4RC26a6S34ECyvgNGO0BVwZaMaqF1xAcA/viewform?embedded=true"
+      width="100%"
+      height="700"
+      frameborder="0">
+    </iframe>
+
+    <a class="btn secondary" href="#" onclick="goToStep(2)">Volver</a>
   </div>
 
 </div>
 
 <script>
-/* ====== CONFIG ====== */
 const WEB_APP_URL =
   'https://script.google.com/macros/s/AKfycbxeaJRRUz99ZBPqAQ43m_OI9uNathUppgkmQlDu496eokpBIgK5PIaPNlnCIctNlnqhDA/exec';
 
-/* ====== PASOS ====== */
 function goToStep(step) {
   document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
   document.getElementById('step' + step).classList.remove('hidden');
 }
 
-/* ====== HORARIOS ====== */
 async function updateTimes() {
   const dateInput = document.getElementById('date');
   const timeSelect = document.getElementById('time');
@@ -113,49 +96,32 @@ async function updateTimes() {
 
   if (!dateInput.value) return;
 
-  const selectedDate = new Date(dateInput.value + 'T00:00');
-  const day = selectedDate.getDay(); // 0 dom - 6 sáb
-
-  // Bloquear fines de semana
+  const day = new Date(dateInput.value + 'T00:00').getDay();
   if (day === 0 || day === 6) {
     alert('No hay turnos los fines de semana');
     dateInput.value = '';
     return;
   }
 
-  const horariosPorDia = {
+  const horarios = {
     1: ['14:00','15:00','16:00','17:00'],
     2: ['11:00','12:00','14:00','15:00','16:00'],
     3: ['15:00','16:00','17:00','18:00 (grupal)'],
     4: ['12:00','14:00','15:00','16:00','17:00','18:00'],
     5: ['12:00','13:00','14:00','15:00','18:00 (grupal)']
-  };
+  }[day];
 
-  const baseTimes = horariosPorDia[day] || [];
+  const res = await fetch(`${WEB_APP_URL}?date=${dateInput.value}`);
+  const data = await res.json();
+  const ocupados = data.occupied || [];
 
-  try {
-    const res = await fetch(`${WEB_APP_URL}?date=${dateInput.value}`);
-    const data = await res.json();
-    const ocupados = data.occupied || [];
-
-    baseTimes.forEach(t => {
-      const limpio = t.replace(' (grupal)', '');
-      if (!ocupados.includes(limpio)) {
-        const opt = document.createElement('option');
-        opt.textContent = t;
-        timeSelect.appendChild(opt);
-      }
-    });
-
-    if (!timeSelect.options.length) {
-      alert('Ese día no tiene horarios disponibles');
-      dateInput.value = '';
+  horarios.forEach(h => {
+    if (!ocupados.includes(h.replace(' (grupal)', ''))) {
+      const o = document.createElement('option');
+      o.textContent = h;
+      timeSelect.appendChild(o);
     }
-
-  } catch (e) {
-    alert('No se pudo consultar disponibilidad');
-    console.error(e);
-  }
+  });
 }
 </script>
 
