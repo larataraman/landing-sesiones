@@ -105,6 +105,37 @@
   };
 
   function updateTimes() {
+    function updateTimes() {
+  const dateInput = document.getElementById('date');
+  const timeSelect = document.getElementById('time');
+  timeSelect.innerHTML = '';
+
+  if (!dateInput.value) return;
+
+  const selectedDate = new Date(dateInput.value + 'T00:00');
+  const day = selectedDate.getDay(); // 0 domingo, 6 sábado
+
+  // bloquear fines de semana
+  if (day === 0 || day === 6) {
+    alert('No hay turnos disponibles los fines de semana');
+    dateInput.value = '';
+    return;
+  }
+
+  const timesByDay = {
+    1: ['14:00','15:00','16:00','17:00'],
+    2: ['11:00','12:00','14:00','15:00','16:00'],
+    3: ['15:00','16:00','17:00','18:00 (grupal)'],
+    4: ['12:00','14:00','15:00','16:00','17:00','18:00'],
+    5: ['12:00','13:00','14:00','15:00','18:00 (grupal)']
+  };
+
+  timesByDay[day].forEach(t => {
+    const opt = document.createElement('option');
+    opt.textContent = t;
+    timeSelect.appendChild(opt);
+  });
+}
     const dateInput = document.getElementById('date');
     const timeSelect = document.getElementById('time');
     timeSelect.innerHTML = '';
