@@ -53,6 +53,11 @@
       width: 100%;
       padding: 10px;
       margin-top: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    ul {
+      padding-left: 18px;
     }
   </style>
 </head>
@@ -65,31 +70,37 @@
     <h1>Sesiones de acompañamiento</h1>
 
     <p>
-      Espacios de orientación terapéutica para personas y familias atravesadas
-      por situaciones de adicciones, dependencia emocional o problemáticas de salud mental.
-      Trabajamos situaciones concretas, procesos personales y vínculos, con foco práctico
-      para tomar decisiones más sanas.
+      Acompaño a personas y familias que atraviesan situaciones complejas vinculadas
+      a adicciones, dependencia emocional y problemáticas de salud mental.
+      <br><br>
+      Las sesiones están orientadas a revisar situaciones concretas, ordenar escenarios,
+      pensar decisiones posibles y encontrar formas más sanas de posicionarse,
+      tanto a nivel personal como vincular.
     </p>
 
     <h2>Tipos de sesiones</h2>
-    <p>
-      <strong>Sesión individual</strong><br>
-      Duración: 1 hora<br>
-      Valor total: $55.000 – seña: $27.500
-    </p>
+    <ul>
+      <li>
+        <strong>Sesión individual</strong><br>
+        Duración: 1 hora<br>
+        Valor total: $55.000 – seña: $27.500
+      </li>
+      <br>
+      <li>
+        <strong>Sesión grupal / familiar</strong><br>
+        Duración: 1 hora y media<br>
+        Valor total: $80.000 – seña: $40.000
+      </li>
+    </ul>
 
-    <p>
-      <strong>Sesión grupal / familiar</strong><br>
-      Duración: 1 hora y media<br>
-      Valor total: $80.000 – seña: $40.000
-    </p>
+    <p><em>Las sesiones se reservan con al menos 48 hs de anticipación.</em></p>
 
     <a class="btn" href="#" onclick="goToStep(2)">Elegir día y horario</a>
   </div>
 
   <!-- PASO 2 -->
   <div class="card hidden" id="step2">
-    <h2>Elegir día y horario</h2>
+    <h2>Día y horario</h2>
 
     <label>Fecha</label>
     <input type="date" id="date" onchange="updateTimes()" />
@@ -104,18 +115,17 @@
   <!-- PASO 3 -->
   <div class="card hidden" id="step3">
     <h2>Formulario previo</h2>
-    <p>Completá este formulario antes de continuar con el pago.</p>
+    <p>Completá este formulario antes de avanzar con el pago.</p>
 
     <iframe
       id="googleForm"
+      src="https://docs.google.com/forms/d/e/1FAIpQLSc-oVgheFJldFczo4RC26a6S34ECyvgNGO0BVwZaMaqF1xAcA/viewform?embedded=true"
       width="100%"
       height="700"
-      frameborder="0"
-      marginheight="0"
-      marginwidth="0">
+      frameborder="0">
     </iframe>
 
-    <a class="btn secondary" href="#" onclick="loadForm(); setPaymentLink(); goToStep(4)">
+    <a class="btn secondary" href="#" onclick="setPaymentLink(); goToStep(4)">
       Continuar
     </a>
   </div>
@@ -123,7 +133,8 @@
   <!-- PASO 4 -->
   <div class="card hidden" id="step4">
     <h2>Pago de seña</h2>
-    <p>Para reservar el horario se abona la seña correspondiente.</p>
+
+    <p id="priceText"></p>
 
     <a
       class="btn"
@@ -138,60 +149,62 @@
 
 <script>
   const timesByDay = {
-    1: ['14:00', '15:00', '16:00'],
-    2: ['11:00', '12:00', '14:00', '15:00', '16:00'],
-    3: ['15:00', '16:00', '17:00', '18:00 (grupal)'],
-    4: ['12:00', '14:00', '15:00'],
-    5: ['12:00', '13:00', '14:00', '15:00', '18:00 (grupal)']
+    lunes: ['14:00', '15:00', '16:00'],
+    martes: ['11:00', '12:00', '14:00', '15:00', '16:00'],
+    miercoles: ['15:00', '16:00', '17:00', '18:00 (grupal)'],
+    jueves: ['12:00', '14:00', '15:00'],
+    viernes: ['12:00', '13:00', '14:00', '15:00', '18:00 (grupal)']
   };
 
   function updateTimes() {
-    const date = document.getElementById('date').value;
+    const dateInput = document.getElementById('date');
     const timeSelect = document.getElementById('time');
     timeSelect.innerHTML = '';
 
-    if (!date) return;
+    if (!dateInput.value) return;
 
-    const day = new Date(date + 'T00:00').getDay();
-    if (!timesByDay[day]) {
-      alert('Solo lunes a viernes');
-      document.getElementById('date').value = '';
+    const selectedDate = new Date(dateInput.value + 'T00:00');
+    const dayIndex = selectedDate.getDay();
+
+    const map = {
+      1: 'lunes',
+      2: 'martes',
+      3: 'miercoles',
+      4: 'jueves',
+      5: 'viernes'
+    };
+
+    const dayKey = map[dayIndex];
+    if (!dayKey) {
+      alert('Solo hay turnos de lunes a viernes');
+      dateInput.value = '';
       return;
     }
 
-    timesByDay[day].forEach(t => {
+    timesByDay[dayKey].forEach(t => {
       const opt = document.createElement('option');
       opt.textContent = t;
       timeSelect.appendChild(opt);
     });
   }
 
-  function loadForm() {
-    const date = document.getElementById('date').value;
-    const time = document.getElementById('time').value;
-
-    const base =
-      'https://docs.google.com/forms/d/e/1FAIpQLSc-oVgheFJldFczo4RC26a6S34ECyvgNGO0BVwZaMaqF1xAcA/viewform?usp=pp_url';
-
-    const url =
-      base +
-      '&entry.304542391=' + encodeURIComponent(date) +
-      '&entry.989379628=' + encodeURIComponent(time) +
-      '&embedded=true';
-
-    document.getElementById('googleForm').src = url;
-  }
-
   function setPaymentLink() {
     const time = document.getElementById('time').value;
     const payBtn = document.getElementById('payButton');
+    const priceText = document.getElementById('priceText');
 
     const linkIndividual = 'PEGAR_LINK_MP_27500';
     const linkGrupal = 'PEGAR_LINK_MP_40000';
 
-    payBtn.href = time.includes('grupal')
-      ? linkGrupal
-      : linkIndividual;
+    if (time.includes('grupal')) {
+      payBtn.href = linkGrupal;
+      priceText.innerHTML =
+        'Sesión grupal / familiar – seña: <strong>$40.000</strong>';
+    } else {
+      payBtn.href = linkIndividual;
+      priceText.innerHTML =
+        'Sesión individual – seña: <strong>$27.500</strong>';
+    }
   }
 
   function goToStep(step) {
